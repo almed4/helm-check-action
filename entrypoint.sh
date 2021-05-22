@@ -94,7 +94,7 @@ function helmPackage {
     return $HELM_PACKAGE_EXIT_CODE
   else
     echo "Skipped due to failure: Previous step has failed"
-    return $1
+    return "$1"
   fi
   return 0
 }
@@ -113,6 +113,8 @@ function totalInfo {
 
 DIRECTORY=$1
 
+pwd
+li
 displayInfo
 nonEmpty
 helmLint $?

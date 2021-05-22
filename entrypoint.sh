@@ -106,15 +106,13 @@ function totalInfo {
     echo "Examination is completed; no errors found!"
     exit 0
   else
-    echo "Examination is completed; errors found, check the log for details!"
+    echo "Helm actions are completed; errors found, check the log for details!"
     exit 1
   fi
 }
 
 DIRECTORY=$1
 
-pwd
-ls -R
 displayInfo
 nonEmpty
 helmLint $?

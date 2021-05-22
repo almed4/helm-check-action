@@ -114,7 +114,7 @@ function totalInfo {
 DIRECTORY=$1
 
 pwd
-li
+ls -R
 displayInfo
 nonEmpty
 helmLint $?

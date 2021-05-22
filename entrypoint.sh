@@ -17,54 +17,78 @@ function displayInfo {
   printDelimeter
   echo
   HELM_CHECK_VERSION="v0.2.0"
-  HELM_CHECK_SOURCES="https://github.com/igabaydulin/helm-check-action"
+  HELM_CHECK_SOURCES="https://github.com/almed4/helm-check-action"
   echo "Helm-Check $HELM_CHECK_VERSION"
   echo -e "Source code: $HELM_CHECK_SOURCES"
   echo
   printDelimeter
 }
 
-function helmLint {
-  echo -e "\n\n\n"
-  echo -e "1. Checking a chart for possible issues\n"
-  if [ -z "$CHART_LOCATION" ]; then
-    echo "Skipped due to condition: \$CHART_LOCATION is not provided"
-    return -1
-  fi
-  echo "helm lint $CHART_LOCATION"
-  printStepExecutionDelimeter
-  helm lint "$CHART_LOCATION"
-  HELM_LINT_EXIT_CODE=$?
-  printStepExecutionDelimeter
-  if [ $HELM_LINT_EXIT_CODE -eq 0 ]; then
-    echo "Result: SUCCESS"
+function nonEmpty {
+  if [ "$(-d "$DIRECTORY")" ] && ! [ "$(ls -A "$DIRECTORY")" ]; then
+    echo "Skipped due to condition: no templates provided."
+    return 1
   else
-    echo "Result: FAILED"
+      return 0
   fi
-  return $HELM_LINT_EXIT_CODE
 }
 
-function helmTemplate {
-  printLargeDelimeter
-  echo -e "2. Trying to render templates with provided values\n"
+function helmLint {
+  echo -e "\n\n\n"
+  echo -e "1. Checking charts for possible issues\n"
+  i=0
   if [[ "$1" -eq 0 ]]; then
-    if [ -n "$CHART_VALUES" ]; then
-      echo "helm template --values $CHART_VALUES $CHART_LOCATION"
+    for dir in "$DIRECTORY"/*; do
+      echo "helm lint $dir"
       printStepExecutionDelimeter
-      helm template --values "$CHART_VALUES" "$CHART_LOCATION"
-      HELM_TEMPLATE_EXIT_CODE=$?
+      helm lint "$dir"
+      HELM_LINT_EXIT_CODE=$?
       printStepExecutionDelimeter
-      if [ $HELM_TEMPLATE_EXIT_CODE -eq 0 ]; then
-        echo "Result: SUCCESS"
-      else
-        echo "Result: FAILED"
-      fi
-      return $HELM_TEMPLATE_EXIT_CODE
+      i=$((i+1))
+    done
+    if [ $HELM_LINT_EXIT_CODE -eq 0 ]; then
+      echo "Result: SUCCESS"
+      echo "Charts Linted: $i"
     else
-      printStepExecutionDelimeter
-      echo "Skipped due to condition: \$CHART_VALUES is not provided"
-      printStepExecutionDelimeter
+      echo "Result: FAILED"
     fi
+    return $HELM_LINT_EXIT_CODE
+  fi
+}
+
+function helmPackage {
+  printLargeDelimeter
+  echo -e "2. Trying to package charts\n"
+  if [[ "$1" -eq 0 ]]; then
+    printStepExecutionDelimeter
+    echo -e "Creating package directory"
+    mkdir "$DIRECTORY"/packages
+    printStepExecutionDelimeter
+    i=0
+    for dir in "$DIRECTORY"/*; do
+      if [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
+        echo "helm package $dir"
+        printStepExecutionDelimeter
+        helm package "$dir" --destination "$DIRECTORY/packages"
+        HELM_PACKAGE_EXIT_CODE=$?
+        printStepExecutionDelimeter
+        i=$((i+1))
+      else
+        printStepExecutionDelimeter
+        echo "Skipped due to condition: no chart found."
+        printStepExecutionDelimeter
+      fi
+    done
+    if [ $HELM_PACKAGE_EXIT_CODE -eq 0 ]; then
+      echo "Result: SUCCESS"
+      echo "Charts Packaged: $i"
+      printStepExecutionDelimeter
+      echo "Exporting package directory"
+      echo "::set-output name=packages::$DIRECTORY/packages"
+    else
+      echo "Result: FAILED"
+    fi
+    return $HELM_PACKAGE_EXIT_CODE
   else
     echo "Skipped due to failure: Previous step has failed"
     return $1
@@ -84,7 +108,10 @@ function totalInfo {
   fi
 }
 
+DIRECTORY=$1
+
 displayInfo
-helmLint
-helmTemplate $?
+nonEmpty "$1"
+helmLint $?
+helmPackage $?
 totalInfo $?

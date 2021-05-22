@@ -1,0 +1,15 @@
+name: 'Helm Lint & Package'
+description: 'Lint and package all helm charts in directory'
+inputs:
+  directory:
+    description: 'Path to directory containing charts.'
+    required: true
+    default: /
+outputs:
+  packages:
+    description: 'Path to directory containing generated helm packages.'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.directory }}

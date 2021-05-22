@@ -25,12 +25,15 @@ function displayInfo {
 }
 
 function nonEmpty {
-  if [ "$(-d "$DIRECTORY")" ] && ! [ "$(ls -A "$DIRECTORY")" ]; then
+  echo -e "\n\n\n"
+  echo "Running in directory /$DIRECTORY"
+  if [ -d "$DIRECTORY" ] && ! [ "$(ls -A "$DIRECTORY")" ]; then
     echo "Skipped due to condition: no templates provided."
     return 1
   else
       return 0
   fi
+  printDelimeter
 }
 
 function helmLint {
@@ -111,7 +114,7 @@ function totalInfo {
 DIRECTORY=$1
 
 displayInfo
-nonEmpty "$1"
+nonEmpty
 helmLint $?
 helmPackage $?
 totalInfo $?

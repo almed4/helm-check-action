@@ -41,6 +41,7 @@ function helmLint {
   echo -e "1. Checking charts for possible issues\n"
   i=0
   if [[ "$1" -eq 0 ]]; then
+    set +o noglob
     for dir in "$DIRECTORY"/*; do
       echo "helm lint $dir"
       printStepExecutionDelimeter
@@ -68,7 +69,8 @@ function helmPackage {
     mkdir "$DIRECTORY"/packages
     printStepExecutionDelimeter
     i=0
-    for dir in "$DIRECTORY"/*; do
+    set +o noglob
+    for dir in "$DIRECTORY"/*/; do
       if [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
         echo "helm package $dir"
         printStepExecutionDelimeter

@@ -75,12 +75,12 @@ function helmPackage {
     mkdir "$DIRECTORY"/packages
     printStepExecutionDelimeter
     i=0
-    HELM_LINT_EXIT_CODE=0
+    HELM_PACKAGE_EXIT_CODE=0
     for dir in $(find $DIRECTORY -type d -maxdepth 1); do
       if [ "$dir" != "$DIRECTORY" ] && [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
-        echo -e "\n helm package $dir"
+        echo "helm package $dir"
         helm package "$dir" --destination "$DIRECTORY/packages"
-        HELM_LINT_EXIT_CODE=$((HELM_LINT_EXIT_CODE > $? ? HELM_LINT_EXIT_CODE : $?))
+        HELM_PACKAGE_EXIT_CODE=$((HELM_PACKAGE_EXIT_CODE > $? ? HELM_PACKAGE_EXIT_CODE : $?))
         printStepExecutionDelimeter
         i=$((i+1))
       else

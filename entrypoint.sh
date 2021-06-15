@@ -40,18 +40,19 @@ function helmLint {
   echo -e "\n\n\n"
   echo -e "1. Checking charts for possible issues\n"
   i=0
+  HELM_LINT_EXIT_CODE=0
   if [[ "$1" -eq 0 ]]; then
     for dir in $(find $DIRECTORY -type d -maxdepth 1); do
       if [ "$dir" != "$DIRECTORY" ] && [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
         echo "helm lint $dir"
         printStepExecutionDelimeter
         helm lint "$dir"
-        HELM_LINT_EXIT_CODE=$?
+        HELM_LINT_EXIT_CODE=$((HELM_LINT_EXIT_CODE > $? ? HELM_LINT_EXIT_CODE : $?))
         printStepExecutionDelimeter
         i=$((i+1))
       else
         printStepExecutionDelimeter
-        echo "Skipped due to condition: no chart found."
+        echo "$dir skipped due to condition: no chart found."
         printStepExecutionDelimeter
       fi
     done
@@ -74,16 +75,17 @@ function helmPackage {
     mkdir "$DIRECTORY"/packages
     printStepExecutionDelimeter
     i=0
+    HELM_LINT_EXIT_CODE=0
     for dir in $(find $DIRECTORY -type d -maxdepth 1); do
       if [ "$dir" != "$DIRECTORY" ] && [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
         echo -e "\n helm package $dir"
         helm package "$dir" --destination "$DIRECTORY/packages"
-        HELM_PACKAGE_EXIT_CODE=$?
+        HELM_LINT_EXIT_CODE=$((HELM_LINT_EXIT_CODE > $? ? HELM_LINT_EXIT_CODE : $?))
         printStepExecutionDelimeter
         i=$((i+1))
       else
         printStepExecutionDelimeter
-        echo "Skipped due to condition: no chart found."
+        echo "$dir skipped due to condition: no chart found."
         printStepExecutionDelimeter
       fi
     done

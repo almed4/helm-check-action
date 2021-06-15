@@ -16,7 +16,7 @@ function displayInfo {
   echo
   printDelimeter
   echo
-  HELM_CHECK_VERSION="v1"
+  HELM_CHECK_VERSION="v2"
   HELM_CHECK_SOURCES="https://github.com/almed4/helm-check-action"
   echo "Helm-Check $HELM_CHECK_VERSION"
   echo -e "Source code: $HELM_CHECK_SOURCES"
@@ -42,12 +42,18 @@ function helmLint {
   i=0
   if [[ "$1" -eq 0 ]]; then
     for dir in $(find $DIRECTORY -type d -maxdepth 1); do
-      echo "helm lint $dir"
-      printStepExecutionDelimeter
-      helm lint "$dir"
-      HELM_LINT_EXIT_CODE=$?
-      printStepExecutionDelimeter
-      i=$((i+1))
+      if [ "$dir" != "$DIRECTORY" ] && [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
+        echo "helm lint $dir"
+        printStepExecutionDelimeter
+        helm lint "$dir"
+        HELM_LINT_EXIT_CODE=$?
+        printStepExecutionDelimeter
+        i=$((i+1))
+      else
+        printStepExecutionDelimeter
+        echo "Skipped due to condition: no chart found."
+        printStepExecutionDelimeter
+      fi
     done
     if [ $HELM_LINT_EXIT_CODE -eq 0 ]; then
       echo "Result: SUCCESS"
@@ -69,9 +75,8 @@ function helmPackage {
     printStepExecutionDelimeter
     i=0
     for dir in $(find $DIRECTORY -type d -maxdepth 1); do
-      if [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
-        echo "helm package $dir"
-        printStepExecutionDelimeter
+      if [ "$dir" != "$DIRECTORY" ] && [ "$dir" != "$DIRECTORY/packages" ] && [ -n "$dir" ]; then
+        echo -e "\n helm package $dir"
         helm package "$dir" --destination "$DIRECTORY/packages"
         HELM_PACKAGE_EXIT_CODE=$?
         printStepExecutionDelimeter

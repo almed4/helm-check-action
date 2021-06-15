@@ -1,6 +1,6 @@
 FROM alpine/helm:3.5.3
 
-LABEL version="1"
+LABEL version="2"
 LABEL repository="https://github.com/almed4/helm-check-action"
 LABEL maintainer="Igor Gabaydulin"
 
